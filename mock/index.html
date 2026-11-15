@@ -60,7 +60,7 @@ button { cursor: pointer; }
 .preview { display: grid; place-items: center; padding: 6px 0 4px; }
 .preview .cover { width: 130px; }
 .field { display: grid; gap: 6px; margin-bottom: 12px; font-size: 12px; color: var(--muted); }
-.field input[type=text] { padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
+.field input[type=text] { width: 100%; min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
 .seg { display: flex; background: var(--line); border-radius: 10px; padding: 3px; gap: 3px; }
 .seg button { flex: 1; border: 0; background: none; border-radius: 8px; padding: 6px 0; font-size: 12px; color: var(--text); }
 .seg button.on { background: var(--card); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
@@ -132,6 +132,16 @@ th { color: var(--muted); font-weight: 500; font-size: 11px; }
 .src button { border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 8px 4px; font-size: 11px; }
 .src button.on { border-color: var(--pink-d); color: var(--pink-d); font-weight: 700; }
 
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.two > * { min-width: 0; }
+.rulebox { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 12px 10px; }
+.rulebox .field { margin-bottom: 10px; }
+.rule { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px 8px 12px; margin-bottom: 8px; }
+.rule .rg { font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.rule .rl { font-size: 11px; color: var(--muted); }
+.rule button { grid-row: 1 / 3; grid-column: 2; border: 0; background: none; font-size: 18px; color: var(--muted); padding: 4px 8px; }
+.rulepv { font-size: 12px; background: var(--phone); border: 1px dashed var(--line); border-radius: 10px; padding: 8px 10px; line-height: 1.6; font-variant-numeric: tabular-nums; }
+.rulepv.err { color: #e0435a; }
 .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #3a2a35; color: #fff; padding: 10px 18px; border-radius: 99px; font-size: 14px; z-index: 50; box-shadow: 0 6px 16px rgba(0,0,0,.25); }
 
 @media (max-width: 420px) {
@@ -143,7 +153,7 @@ th { color: var(--muted); font-weight: 500; font-size: 11px; }
 <body>
 
 <header class="intro">
-  <h1>カードクローゼット v0.3 モック</h1>
+  <h1>カードクローゼット v0.4 モック</h1>
   <p>汎用カードフォルダ版の画面イメージです。各画面は実際に操作できます（データは仮のもので、保存はされません）。
   ②でアイコンや背景を変えると①と③にも反映され、③のポケットをタップすると④に詳細が出ます。<br>カード名・フォルダ名はすべて架空のサンプルです。アプリには特定の作品の画像・名称・カードリストを含めません。</p>
 </header>
@@ -234,31 +244,56 @@ th { color: var(--muted); font-weight: 500; font-size: 11px; }
     <p class="note">未所持カードは「ネットで調べる」で検索を別タブで開くだけ。アプリはネットの画像を取得・表示・保存しません。</p>
   </section>
 
-  <!-- 5. import -->
+  <!-- 5. catalog -->
   <section class="frame" id="f-import">
-    <p class="label"><i>5</i>カタログ取り込み</p>
+    <p class="label"><i>5</i>カタログ作成（番号ルール）</p>
     <div class="phone">
-      <div class="bar"><h2>カタログを追加</h2><button id="doImport">取り込む</button></div>
+      <div class="bar"><h2>カタログを追加</h2><button id="doImport">作成</button></div>
       <div class="body">
         <label class="field">カタログ名<input type="text" value="アイドルカード 第2弾"></label>
-        <div class="src" id="srcSeg">
-          <button class="on">📋 貼り付け</button><button>📄 CSV</button><button>📁 共有ファイル</button>
+        <div class="seg" id="modeSeg" style="margin-bottom:12px">
+          <button data-v="rule" class="on">番号ルールで作る</button><button data-v="paste">リストを貼り付け</button>
         </div>
-        <div class="field">カードリストを入力または貼り付け
-          <textarea id="imText">01, ミルキーリボンブラウス, PR
+
+        <div id="paneRule">
+          <p class="sec" style="margin-top:0">番号ルール <span class="muted" id="ruleTotal"></span></p>
+          <div id="ruleList"></div>
+          <div class="rulebox">
+            <div class="two">
+              <label class="field">頭の文字<input type="text" id="rPrefix" maxlength="8" value="CP"></label>
+              <label class="field">区切り<input type="text" id="rSep" maxlength="2" value="-"></label>
+            </div>
+            <div class="field">番号の桁数
+              <div class="seg" id="digitSeg"><button data-v="1">1</button><button data-v="2">01</button><button data-v="3" class="on">001</button><button data-v="4">0001</button></div>
+            </div>
+            <div class="two">
+              <label class="field">はじめ<input type="text" id="rFrom" inputmode="numeric" maxlength="4" value="1"></label>
+              <label class="field">おわり<input type="text" id="rTo" inputmode="numeric" maxlength="4" value="8"></label>
+            </div>
+            <label class="field">意味・グループ名（任意）<input type="text" id="rLabel" maxlength="20" value="キャンペーン配布"></label>
+            <div class="rulepv" id="rulePv"></div>
+            <button class="btn primary" id="addRule" style="margin:8px 0 0">＋ このルールを追加</button>
+          </div>
+          <p class="hint" style="margin-top:10px">番号の付け方を自分で決めて、空きポケットをまとめて作ります。名前はあとから入れられます。<br>ルールはグループ分けにも使われ、番号を入力すると頭の文字から自動で分類します。</p>
+        </div>
+
+        <div id="panePaste" hidden>
+          <div class="field">カードリストを入力または貼り付け
+            <textarea id="imText">01, ミルキーリボンブラウス, PR
 02, スターダストスカート, R
 03, シャイニーパンプス, N
 04, ムーンライトティアラ, SR
 05, キャンディドレス, CP
 06 サニーキャップ N</textarea>
+          </div>
+          <p class="sec">読み取り結果 <span class="muted" id="imCount"></span></p>
+          <table><thead><tr><th>No.</th><th>名前</th><th>レア</th></tr></thead><tbody id="imTable"></tbody></table>
+          <label class="field" style="margin-top:10px">出典メモ（任意・共有されません）<input type="text" placeholder="例：自分で作成 / 参考にしたページ名"></label>
+          <p class="hint">⚠️ 取り込むのは番号や名前などの情報だけにしてください。説明文などの長い文章は自動で除外します。<br>他のサイトのリストを使うときは、そのサイトの利用規約を確認し、個人で使う範囲にとどめてください。</p>
         </div>
-        <p class="sec">読み取り結果 <span class="muted" id="imCount"></span></p>
-        <table><thead><tr><th>No.</th><th>名前</th><th>レア</th></tr></thead><tbody id="imTable"></tbody></table>
-        <label class="field" style="margin-top:10px">出典メモ（任意・共有されません）<input type="text" placeholder="例：自分で作成 / 参考にしたページ名"></label>
-        <p class="hint">⚠️ 取り込むのは番号や名前などの情報だけにしてください。説明文などの長い文章は自動で除外します。<br>他のサイトのリストを使うときは、そのサイトの利用規約を確認し、個人で使う範囲にとどめてください。</p>
       </div>
     </div>
-    <p class="note">番号と名前のリストを入れると、未所持カードも番号つきでフォルダに並びます。取り込むのは文字の情報だけです。</p>
+    <p class="note">「頭の文字＋桁数＋範囲」で番号のルールを登録。通常の弾とプロモなど、番号の体系が違うものを1つのカタログにまとめられます。</p>
   </section>
 
 </main>
@@ -465,6 +500,61 @@ function renderImport() {
   $('#imTable').innerHTML = rows.map((r) => `<tr><td>${esc(r.no || '—')}</td><td>${esc(r.name || '—')}</td><td>${esc(r.rar || '—')}</td></tr>`).join('');
 }
 
+/* ---------- ⑤ 番号ルール ---------- */
+const MAX_PER_RULE = 500;
+const rules = [
+  { label: '第2弾（通常）', prefix: 'S2', sep: '-', digits: 2, from: 1, to: 60 },
+  { label: 'おかし付属', prefix: 'PX', sep: '-', digits: 3, from: 1, to: 12 },
+];
+let digits = 3;
+const fmt = (r, n) => `${r.prefix}${r.prefix ? r.sep : ''}${String(n).padStart(r.digits, '0')}`;
+const countOf = (r) => r.to - r.from + 1;
+function draftRule() {
+  return { label: $('#rLabel').value.trim(), prefix: $('#rPrefix').value.trim(), sep: $('#rSep').value, digits,
+    from: parseInt($('#rFrom').value, 10), to: parseInt($('#rTo').value, 10) };
+}
+function ruleError(r) {
+  if (!Number.isInteger(r.from) || !Number.isInteger(r.to) || r.from < 0) return 'はじめ・おわりに数字を入れてください';
+  if (r.to < r.from) return '「おわり」は「はじめ」以上にしてください';
+  if (countOf(r) > MAX_PER_RULE) return `1つのルールは ${MAX_PER_RULE} 枚までです`;
+  if (rules.some((x) => x.prefix === r.prefix && x.sep === r.sep && x.digits === r.digits && r.from <= x.to && x.from <= r.to)) return '同じ番号がすでにあります';
+  return '';
+}
+function renderRules() {
+  const total = rules.reduce((n, r) => n + countOf(r), 0);
+  $('#ruleTotal').textContent = `${rules.length} ルール・合計 ${total} 枚`;
+  $('#ruleList').innerHTML = rules.map((r, i) => `<div class="rule">
+      <span class="rg">${esc(fmt(r, r.from))} 〜 ${esc(fmt(r, r.to))}</span>
+      <span class="rl">${esc(r.label || 'グループ名なし')}・${countOf(r)} 枚</span>
+      <button data-delrule="${i}" aria-label="このルールを削除">×</button></div>`).join('');
+  const d = draftRule(), err = ruleError(d), pv = $('#rulePv');
+  pv.classList.toggle('err', !!err);
+  $('#addRule').disabled = !!err;
+  pv.textContent = err || (countOf(d) <= 3
+    ? Array.from({ length: countOf(d) }, (_, i) => fmt(d, d.from + i)).join('、')
+    : `${fmt(d, d.from)}、${fmt(d, d.from + 1)}、… ${fmt(d, d.to)}`) + (err ? '' : `（${countOf(d)} 枚の空きポケットを作成）`);
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  if (b.closest('#modeSeg')) {
+    document.querySelectorAll('#modeSeg button').forEach((x) => x.classList.toggle('on', x === b));
+    $('#paneRule').hidden = b.dataset.v !== 'rule'; $('#panePaste').hidden = b.dataset.v !== 'paste';
+  } else if (b.closest('#digitSeg')) {
+    digits = +b.dataset.v;
+    document.querySelectorAll('#digitSeg button').forEach((x) => x.classList.toggle('on', x === b));
+    renderRules();
+  } else if (b.id === 'addRule') {
+    const d = draftRule();
+    if (ruleError(d)) return;
+    rules.push(d); $('#rFrom').value = d.to + 1; $('#rTo').value = d.to + countOf(d);
+    renderRules(); toast('ルールを追加しました');
+  } else if (b.dataset.delrule !== undefined) {
+    rules.splice(+b.dataset.delrule, 1); renderRules();
+  }
+});
+document.addEventListener('input', (e) => { if (e.target.closest('.rulebox')) renderRules(); });
+
 /* ---------- 共通 ---------- */
 let tt;
 function toast(m) { const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => (t.hidden = true), 1800); }
@@ -503,7 +593,7 @@ document.addEventListener('click', (e) => {
     return renderAll();
   }
   if (b.id === 'saveFolder') return toast('保存しました（モック）');
-  if (b.id === 'doImport') return toast(`${splitRows($('#imText').value).ok.length} 枚をカタログに取り込みました（モック）`);
+  if (b.id === 'doImport') return toast(`${$('#paneRule').hidden ? splitRows($('#imText').value).ok.length : rules.reduce((n, r) => n + countOf(r), 0)} 枚のカタログを作成しました（モック）`);
 });
 document.addEventListener('input', (e) => {
   if (e.target.id === 'edName') { F.name = e.target.value || '名前なし'; renderShelf(); renderBinder(); }
@@ -526,6 +616,7 @@ $('#bdPage').addEventListener('pointerup', (e) => {
 $('#edName').value = F.name;
 renderAll();
 renderImport();
+renderRules();
 </script>
 </body>
 </html>
