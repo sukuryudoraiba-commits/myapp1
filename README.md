@@ -3,7 +3,7 @@
 手持ちのカードを記録・整理するコレクション管理アプリ（PWA プロトタイプ）。
 非公式のファンメイドツールで、公式のカード画像・ロゴは含みません。
 
-- 📐 次期バージョン（汎用カードフォルダ版）の設計: [docs/design.md](docs/design.md)
+- 📐 次期バージョン（汎用カードフォルダ版）の設計と権利配慮の方針: [docs/design.md](docs/design.md)
 - 🖼 画面モック: [mock/index.html](mock/index.html)（公開後は `/mock/`）
 
 ## 機能

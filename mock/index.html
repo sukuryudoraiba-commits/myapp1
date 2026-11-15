@@ -88,7 +88,6 @@ button { cursor: pointer; }
 .cardface .no { font-size: 9px; font-weight: 800; }
 .cardface .em { font-size: 26px; text-align: center; }
 .cardface .nm { font-size: 9px; font-weight: 700; line-height: 1.25; background: rgba(255,255,255,.75); border-radius: 3px; padding: 2px 3px; }
-.cardface.ref { filter: grayscale(1); opacity: .45; }
 .cardface.ph { background: repeating-linear-gradient(45deg, rgba(255,255,255,.6) 0 6px, rgba(255,255,255,.35) 6px 12px); border: 1.5px dashed rgba(90,60,80,.45); justify-content: center; align-items: center; text-align: center; gap: 4px; }
 .cardface.ph .no { font-size: 15px; color: #6e5466; }
 .cardface.ph .nm { background: none; color: #6e5466; font-weight: 500; }
@@ -144,9 +143,9 @@ th { color: var(--muted); font-weight: 500; font-size: 11px; }
 <body>
 
 <header class="intro">
-  <h1>カードクローゼット v0.2 モック</h1>
+  <h1>カードクローゼット v0.3 モック</h1>
   <p>汎用カードフォルダ版の画面イメージです。各画面は実際に操作できます（データは仮のもので、保存はされません）。
-  ②でアイコンや背景を変えると①と③にも反映され、③のポケットをタップすると④に詳細が出ます。</p>
+  ②でアイコンや背景を変えると①と③にも反映され、③のポケットをタップすると④に詳細が出ます。<br>カード名・フォルダ名はすべて架空のサンプルです。アプリには特定の作品の画像・名称・カードリストを含めません。</p>
 </header>
 
 <main class="gallery">
@@ -218,11 +217,11 @@ th { color: var(--muted); font-weight: 500; font-size: 11px; }
         <div class="page" id="bdPage"></div>
         <div class="dots" id="bdDots"></div>
         <div class="legend">
-          <span>🟪 持っている</span><span>▦ 未所持（番号のみ）</span><span>◻︎ 未所持（参考画像）</span>
+          <span>🟪 持っている（自分の写真）</span><span>▦ 未所持（番号と名前だけ）</span>
         </div>
       </div>
     </div>
-    <p class="note">持っていないカードは「番号と名前の空きポケット」か「参考画像を薄く」表示。ページは左右スワイプで送ります。</p>
+    <p class="note">持っていないカードは画像を使わず「番号と名前の空きポケット」で表示。ページは左右スワイプで送ります。</p>
   </section>
 
   <!-- 4. detail -->
@@ -232,7 +231,7 @@ th { color: var(--muted); font-weight: 500; font-size: 11px; }
       <div class="bar"><button data-goto="f-binder">‹ 戻る</button><h2>カード詳細</h2><button>編集</button></div>
       <div class="body" id="detail"></div>
     </div>
-    <p class="note">未所持カードは「ネットで調べる」で番号＋名前の検索を開きます（画像はアプリに保存しません）。</p>
+    <p class="note">未所持カードは「ネットで調べる」で検索を別タブで開くだけ。アプリはネットの画像を取得・表示・保存しません。</p>
   </section>
 
   <!-- 5. import -->
@@ -243,9 +242,9 @@ th { color: var(--muted); font-weight: 500; font-size: 11px; }
       <div class="body">
         <label class="field">カタログ名<input type="text" value="アイドルカード 第2弾"></label>
         <div class="src" id="srcSeg">
-          <button class="on">📋 貼り付け</button><button>📄 CSV</button><button>🔗 共有ファイル</button>
+          <button class="on">📋 貼り付け</button><button>📄 CSV</button><button>📁 共有ファイル</button>
         </div>
-        <div class="field">ネットのカードリストをコピーして貼り付け
+        <div class="field">カードリストを入力または貼り付け
           <textarea id="imText">01, ミルキーリボンブラウス, PR
 02, スターダストスカート, R
 03, シャイニーパンプス, N
@@ -255,10 +254,11 @@ th { color: var(--muted); font-weight: 500; font-size: 11px; }
         </div>
         <p class="sec">読み取り結果 <span class="muted" id="imCount"></span></p>
         <table><thead><tr><th>No.</th><th>名前</th><th>レア</th></tr></thead><tbody id="imTable"></tbody></table>
-        <p class="hint" style="margin-top:10px">「番号, 名前, レアリティ」の順を自動で判別します。区切りはカンマ・タブ・スペースどれでもOK。<br>出典のURLをメモしておくと、あとで見直せます。</p>
+        <label class="field" style="margin-top:10px">出典メモ（任意・共有されません）<input type="text" placeholder="例：自分で作成 / 参考にしたページ名"></label>
+        <p class="hint">⚠️ 取り込むのは番号や名前などの情報だけにしてください。説明文などの長い文章は自動で除外します。<br>他のサイトのリストを使うときは、そのサイトの利用規約を確認し、個人で使う範囲にとどめてください。</p>
       </div>
     </div>
-    <p class="note">ネットのリストを貼るだけで、未所持カードも番号つきでフォルダに並びます。</p>
+    <p class="note">番号と名前のリストを入れると、未所持カードも番号つきでフォルダに並びます。取り込むのは文字の情報だけです。</p>
   </section>
 
 </main>
@@ -332,7 +332,7 @@ const cards = [
   ['10', 'サンセットドレス', 'SR', '🌅', 1, 'd'],
   ['11', 'スノウマフラー', 'R', '❄️', 0, null],
   ['12', 'ギャラクシーリボン', 'PR', '🌌', 0, null],
-].map(([no, name, rar, em, qty, ref]) => ({ no, name, rar, em, qty, hasRef: ref === 'ref' }));
+].map(([no, name, rar, em, qty, ref]) => ({ no, name, rar, em, qty, hasLink: ref === 'ref' }));
 const RAR_BG = { N: ['#efe8f3', '#d9cde6'], R: ['#d6ebff', '#a9cdfa'], PR: ['#ffd6e8', '#ff9fca'], CP: ['#fff0c2', '#ffc96b'], SR: ['#eedcff', '#c69cff'] };
 const faceBg = (c) => { const [a, b] = RAR_BG[c.rar] || RAR_BG.N; return `linear-gradient(150deg, ${a}, ${b})`; };
 
@@ -371,7 +371,7 @@ function renderEditor() {
       <span>色</span><div class="swatches">${STAMP_COLORS.map((c) => `<button class="sw ${ic.color === c ? 'on' : ''}" data-scolor="${c}" style="background:${c}"></button>`).join('')}</div>
       <div class="row"><span>文字</span><input type="text" id="stampText" maxlength="2" value="${esc(ic.text)}"><span class="muted">1〜2文字</span></div>`;
   } else {
-    $('#iconPane').innerHTML = `<button class="upload">📷 写真・画像を選ぶ（正方形に切り抜き）</button>`;
+    $('#iconPane').innerHTML = `<button class="upload">📷 写真・画像を選ぶ（正方形に切り抜き）</button><span class="muted">この端末の中だけで使われ、共有されません</span>`;
   }
 
   const cv = F.cover;
@@ -382,7 +382,7 @@ function renderEditor() {
   } else if (cv.type === 'gradient') {
     $('#coverPane').innerHTML = `<div class="swatches">${GRADS.map(([a, b], i) => `<button class="sw ${cv.grad === i ? 'on' : ''}" data-grad="${i}" style="background:linear-gradient(135deg,${a},${b})"></button>`).join('')}</div>`;
   } else {
-    $('#coverPane').innerHTML = `<button class="upload">📷 写真・画像を選ぶ（明るさ・ぼかし調整つき）</button>`;
+    $('#coverPane').innerHTML = `<button class="upload">📷 写真・画像を選ぶ（明るさ・ぼかし調整つき）</button><span class="muted">この端末の中だけで使われ、共有されません</span>`;
   }
 }
 
@@ -394,7 +394,6 @@ function visibleCards() {
 }
 function faceHtml(c) {
   if (c.qty > 0) return `<div class="cardface" style="background:${faceBg(c)}"><span class="no">No.${c.no} ${c.rar}</span><span class="em">${c.em}</span><span class="nm">${esc(c.name)}</span></div>`;
-  if (c.hasRef) return `<div class="cardface ref" style="background:${faceBg(c)}"><span class="no">No.${c.no}</span><span class="em">${c.em}</span><span class="nm">${esc(c.name)}</span></div>`;
   return `<div class="cardface ph"><span class="no">${c.no}</span><span class="nm">${esc(c.name)}</span></div>`;
 }
 function renderBinder() {
@@ -429,17 +428,19 @@ function renderDetail() {
       <dt>カードNo.</dt><dd>${c.no}</dd>
       <dt>名前</dt><dd>${esc(c.name)}</dd>
       <dt>レアリティ</dt><dd>${c.rar}</dd>
-      <dt>画像</dt><dd>${owned ? '自分で撮影' : c.hasRef ? '参考画像URLあり（保存なし）' : 'なし（番号で表示）'}</dd>
+      <dt>写真</dt><dd>${owned ? '自分で撮影（この端末のみ）' : 'なし（番号で表示）'}</dd>
+      <dt>参考ページ</dt><dd>${c.hasLink ? '登録あり' : '未登録'}</dd>
     </dl>
     ${owned ? `
       <div class="stepper"><button data-qty="-1">−</button><b>×${c.qty}</b><button data-qty="1">＋</button></div>
       <button class="btn">📷 写真を撮り直す</button>
+      <p class="hint" style="margin-bottom:8px">写真はこの端末の中だけに保存され、共有ファイルには含まれません。</p>
       <button class="btn">🔁 交換に出す</button>` : `
       <a class="btn search" href="https://www.google.com/search?q=${q}" target="_blank" rel="noopener">🔍 ネットで調べる</a>
       <button class="btn primary" data-qty="1">🎉 手に入れた！</button>
       <button class="btn">💖 欲しいに入れる</button>
-      <button class="btn">🔗 参考画像のURLを登録</button>
-      <p class="hint">参考画像は表示するだけで端末には保存しません。権利者のサイトの画像は、各サイトの規約に従ってご利用ください。</p>`}
+      <button class="btn">${c.hasLink ? '🔗 参考ページを開く（外部ブラウザ）' : '🔗 参考ページのリンクを登録'}</button>
+      <p class="hint">ネットの画像はアプリに取り込みません。検索や参考ページは、ブラウザで開いて見る形になります。</p>`}
   `;
 }
 
@@ -453,9 +454,14 @@ function parseList(text) {
     return { no, name: t.join(' '), rar };
   });
 }
+const MAX_NAME = 40;
+function splitRows(text) {
+  const all = parseList(text);
+  return { ok: all.filter((r) => r.name.length <= MAX_NAME), skipped: all.filter((r) => r.name.length > MAX_NAME).length };
+}
 function renderImport() {
-  const rows = parseList($('#imText').value);
-  $('#imCount').textContent = `${rows.length} 枚`;
+  const { ok: rows, skipped } = splitRows($('#imText').value);
+  $('#imCount').textContent = `${rows.length} 枚${skipped ? `（長文 ${skipped} 行を除外）` : ''}`;
   $('#imTable').innerHTML = rows.map((r) => `<tr><td>${esc(r.no || '—')}</td><td>${esc(r.name || '—')}</td><td>${esc(r.rar || '—')}</td></tr>`).join('');
 }
 
@@ -497,7 +503,7 @@ document.addEventListener('click', (e) => {
     return renderAll();
   }
   if (b.id === 'saveFolder') return toast('保存しました（モック）');
-  if (b.id === 'doImport') return toast(`${parseList($('#imText').value).length} 枚をカタログに取り込みました（モック）`);
+  if (b.id === 'doImport') return toast(`${splitRows($('#imText').value).ok.length} 枚をカタログに取り込みました（モック）`);
 });
 document.addEventListener('input', (e) => {
   if (e.target.id === 'edName') { F.name = e.target.value || '名前なし'; renderShelf(); renderBinder(); }
