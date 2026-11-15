@@ -3,6 +3,9 @@
 手持ちのカードを記録・整理するコレクション管理アプリ（PWA プロトタイプ）。
 非公式のファンメイドツールで、公式のカード画像・ロゴは含みません。
 
+- 📐 次期バージョン（汎用カードフォルダ版）の設計: [docs/design.md](docs/design.md)
+- 🖼 画面モック: [mock/index.html](mock/index.html)（公開後は `/mock/`）
+
 ## 機能
 | 画面 | できること |
 | --- | --- |
@@ -23,7 +26,14 @@
 python3 -m http.server 8000
 # → http://localhost:8000 を開く
 ```
-GitHub Pages などに置けばスマホから「ホーム画面に追加」でアプリとして使えます。
+## GitHub Pages で公開
+`.github/workflows/pages.yml` が push のたびに公開します。初回だけリポジトリで以下を設定してください。
+1. Settings → Pages → Build and deployment → Source を **GitHub Actions** にする
+2. main 以外のブランチから公開する場合は、Settings → Environments → `github-pages` の
+   Deployment branches にそのブランチを追加する
+
+公開URL: `https://<ユーザー名>.github.io/<リポジトリ名>/`（アプリ）、`…/mock/`（モック）。
+スマホで開いて「ホーム画面に追加」するとアプリとして使えます。
 
 ## 今後の候補
 - 開封記録・収支グラフ（案④）

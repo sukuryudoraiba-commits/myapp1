@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>カードクローゼット モック</title>
+<style>
+:root {
+  --pink: #ff6fae; --pink-d: #e04e93; --violet: #a77bff;
+  --bg: #f6f0f5; --phone: #fff7fb; --card: #fff; --text: #3a2a35; --muted: #8a7684; --line: #f1dbe7;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #141016; --phone: #1d1620; --card: #2a2030; --text: #f5e9f1; --muted: #b49fb0; --line: #3d3044; }
+}
+:root[data-theme="dark"] { --bg: #141016; --phone: #1d1620; --card: #2a2030; --text: #f5e9f1; --muted: #b49fb0; --line: #3d3044; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif; }
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+
+.intro { max-width: 1100px; margin: 0 auto; padding: 28px 16px 8px; }
+.intro h1 { margin: 0 0 6px; font-size: 22px; }
+.intro p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.7; }
+
+.gallery { display: flex; flex-wrap: wrap; gap: 28px 24px; justify-content: center; padding: 20px 16px 60px; }
+.frame { width: 360px; max-width: 100%; }
+.frame > .label { font-size: 13px; font-weight: 700; margin: 0 0 8px 4px; display: flex; gap: 8px; align-items: center; }
+.frame > .label i { font-style: normal; background: var(--pink); color: #fff; border-radius: 99px; width: 22px; height: 22px; display: grid; place-items: center; font-size: 12px; }
+.frame > .note { font-size: 12px; color: var(--muted); margin: 8px 4px 0; line-height: 1.6; }
+.phone {
+  height: 720px; border-radius: 34px; overflow: hidden; position: relative;
+  background: var(--phone); border: 8px solid #2b2230; box-shadow: 0 16px 40px rgba(60, 20, 50, .18);
+  display: flex; flex-direction: column; transition: box-shadow .3s;
+}
+.phone.flash { box-shadow: 0 0 0 4px var(--pink), 0 16px 40px rgba(60, 20, 50, .18); }
+.bar { padding: 14px 16px 10px; display: flex; align-items: center; gap: 10px; background: linear-gradient(90deg, #ff8ac0, #c08bff); color: #fff; }
+.bar h2 { margin: 0; font-size: 16px; flex: 1; }
+.bar button { border: 0; background: rgba(255,255,255,.25); color: #fff; border-radius: 99px; padding: 4px 10px; font-size: 13px; }
+.body { flex: 1; overflow: auto; padding: 14px; }
+.muted { color: var(--muted); font-size: 12px; }
+.sec { font-size: 13px; font-weight: 700; margin: 14px 0 8px; }
+
+/* ---- shelf ---- */
+.shelf { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.binder { border: 0; padding: 0; text-align: left; background: none; }
+.cover {
+  aspect-ratio: 3 / 4; border-radius: 6px 14px 14px 6px; position: relative; overflow: hidden;
+  box-shadow: inset 10px 0 0 rgba(0,0,0,.12), 0 4px 10px rgba(0,0,0,.12);
+  display: grid; place-items: center;
+}
+.cover .ic { width: 56px; height: 56px; display: grid; place-items: center; font-size: 40px; filter: drop-shadow(0 2px 3px rgba(0,0,0,.2)); }
+.cover .ic svg { width: 56px; height: 56px; }
+.cover .prog { position: absolute; left: 14px; right: 8px; bottom: 8px; height: 6px; background: rgba(255,255,255,.55); border-radius: 99px; overflow: hidden; }
+.cover .prog b { display: block; height: 100%; background: #fff; }
+.binder .nm { font-size: 13px; font-weight: 700; margin-top: 6px; }
+.binder .pc { font-size: 11px; color: var(--muted); }
+.binder.add .cover { background: transparent; border: 2px dashed var(--line); box-shadow: none; font-size: 32px; color: var(--muted); }
+
+/* ---- editor ---- */
+.preview { display: grid; place-items: center; padding: 6px 0 4px; }
+.preview .cover { width: 130px; }
+.field { display: grid; gap: 6px; margin-bottom: 12px; font-size: 12px; color: var(--muted); }
+.field input[type=text] { padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
+.seg { display: flex; background: var(--line); border-radius: 10px; padding: 3px; gap: 3px; }
+.seg button { flex: 1; border: 0; background: none; border-radius: 8px; padding: 6px 0; font-size: 12px; color: var(--text); }
+.seg button.on { background: var(--card); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+.swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.sw { width: 34px; height: 34px; border-radius: 10px; border: 2px solid transparent; padding: 0; background-clip: padding-box; display: grid; place-items: center; font-size: 20px; background-color: var(--card); }
+.sw.on { border-color: var(--pink-d); }
+.sw svg { width: 26px; height: 26px; }
+.upload { border: 1px dashed var(--muted); border-radius: 10px; padding: 8px; text-align: center; font-size: 12px; color: var(--muted); background: none; width: 100%; }
+.row { display: flex; gap: 8px; align-items: center; }
+.row input[type=text] { width: 70px; text-align: center; }
+
+/* ---- binder view ---- */
+.binder-bg { flex: 1; overflow: auto; padding: 12px; }
+.prog-line { background: rgba(255,255,255,.85); border-radius: 12px; padding: 8px 10px; margin-bottom: 10px; color: #3a2a35; }
+.prog-line .t { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; }
+.prog-line .b { height: 8px; border-radius: 99px; background: #f1dbe7; overflow: hidden; margin-top: 5px; }
+.prog-line .b i { display: block; height: 100%; background: linear-gradient(90deg, #ff8ac0, #c08bff); }
+.page { background: rgba(255,255,255,.45); border-radius: 12px; padding: 8px; display: grid; gap: 7px; backdrop-filter: blur(2px); }
+.pocket {
+  aspect-ratio: 5 / 7; border-radius: 6px; border: 0; padding: 0; position: relative; overflow: hidden;
+  background: rgba(255,255,255,.35); box-shadow: inset 0 0 0 1px rgba(255,255,255,.8), 0 1px 3px rgba(0,0,0,.08);
+}
+.pocket::after { content: ""; position: absolute; inset: 0; background: linear-gradient(160deg, rgba(255,255,255,.45) 0 18%, transparent 30%); pointer-events: none; }
+.cardface { position: absolute; inset: 4px; border-radius: 4px; display: flex; flex-direction: column; justify-content: space-between; padding: 5px; color: #3a2a35; text-align: left; }
+.cardface .no { font-size: 9px; font-weight: 800; }
+.cardface .em { font-size: 26px; text-align: center; }
+.cardface .nm { font-size: 9px; font-weight: 700; line-height: 1.25; background: rgba(255,255,255,.75); border-radius: 3px; padding: 2px 3px; }
+.cardface.ref { filter: grayscale(1); opacity: .45; }
+.cardface.ph { background: repeating-linear-gradient(45deg, rgba(255,255,255,.6) 0 6px, rgba(255,255,255,.35) 6px 12px); border: 1.5px dashed rgba(90,60,80,.45); justify-content: center; align-items: center; text-align: center; gap: 4px; }
+.cardface.ph .no { font-size: 15px; color: #6e5466; }
+.cardface.ph .nm { background: none; color: #6e5466; font-weight: 500; }
+.tag { position: absolute; top: 6px; right: 6px; z-index: 1; font-size: 8px; font-weight: 800; background: #3a2a35; color: #fff; padding: 1px 4px; border-radius: 4px; }
+.qtyb { position: absolute; bottom: 6px; right: 6px; z-index: 1; font-size: 9px; font-weight: 800; background: var(--pink-d); color: #fff; padding: 1px 5px; border-radius: 99px; }
+.dots { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
+.dots button { width: 8px; height: 8px; padding: 0; border-radius: 50%; border: 0; background: rgba(255,255,255,.6); box-shadow: 0 0 0 1px rgba(0,0,0,.15); }
+.dots button.on { background: var(--pink-d); }
+.toolbar { display: flex; gap: 6px; margin-bottom: 10px; }
+.chip { border: 0; background: rgba(255,255,255,.85); color: #3a2a35; border-radius: 99px; padding: 5px 10px; font-size: 11px; }
+.chip.on { background: #3a2a35; color: #fff; }
+.legend { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; font-size: 10px; background: rgba(255,255,255,.85); color: #3a2a35; padding: 6px 8px; border-radius: 8px; }
+
+/* ---- detail ---- */
+.big { width: 190px; margin: 4px auto 12px; aspect-ratio: 5/7; position: relative; border-radius: 10px; overflow: hidden; box-shadow: 0 6px 16px rgba(0,0,0,.15); }
+.big .cardface { inset: 0; border-radius: 10px; padding: 12px; }
+.big .cardface .no { font-size: 14px; }
+.big .cardface .em { font-size: 60px; }
+.big .cardface .nm { font-size: 13px; padding: 4px 6px; }
+.big .cardface.ph .no { font-size: 30px; }
+.status { text-align: center; margin-bottom: 10px; }
+.pill { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 12px; border-radius: 99px; }
+.pill.own { background: #d8f5e9; color: #1d7a55; }
+.pill.no { background: #eee6ec; color: #6e5466; }
+dl.kv { display: grid; grid-template-columns: 88px 1fr; gap: 6px 10px; font-size: 13px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin: 0 0 12px; }
+dl.kv dt { color: var(--muted); }
+dl.kv dd { margin: 0; }
+.btn { display: block; width: 100%; text-align: center; text-decoration: none; border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 10px; font-size: 14px; margin-bottom: 8px; color: var(--text); }
+.btn.primary { background: var(--pink); border-color: var(--pink); color: #fff; font-weight: 700; }
+.btn.search { border-color: var(--violet); color: var(--violet); font-weight: 700; }
+.hint { font-size: 11px; color: var(--muted); line-height: 1.6; background: var(--card); border: 1px dashed var(--line); border-radius: 10px; padding: 8px 10px; }
+.stepper { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 12px; }
+.stepper button { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); font-size: 18px; }
+.stepper b { font-size: 20px; min-width: 40px; text-align: center; }
+
+/* ---- import ---- */
+textarea { width: 100%; height: 130px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); font-size: 13px; line-height: 1.5; resize: vertical; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; background: var(--card); border-radius: 12px; overflow: hidden; }
+th, td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left; }
+th { color: var(--muted); font-weight: 500; font-size: 11px; }
+.src { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
+.src button { border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 8px 4px; font-size: 11px; }
+.src button.on { border-color: var(--pink-d); color: var(--pink-d); font-weight: 700; }
+
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #3a2a35; color: #fff; padding: 10px 18px; border-radius: 99px; font-size: 14px; z-index: 50; box-shadow: 0 6px 16px rgba(0,0,0,.25); }
+
+@media (max-width: 420px) {
+  .gallery { padding: 16px 16px 40px; }
+  .phone { height: 680px; border-width: 6px; border-radius: 28px; }
+}
+</style>
+</head>
+<body>
+
+<header class="intro">
+  <h1>カードクローゼット v0.2 モック</h1>
+  <p>汎用カードフォルダ版の画面イメージです。各画面は実際に操作できます（データは仮のもので、保存はされません）。
+  ②でアイコンや背景を変えると①と③にも反映され、③のポケットをタップすると④に詳細が出ます。</p>
+</header>
+
+<main class="gallery">
+
+  <!-- 1. shelf -->
+  <section class="frame" id="f-shelf">
+    <p class="label"><i>1</i>フォルダ棚（ホーム）</p>
+    <div class="phone">
+      <div class="bar"><h2>マイフォルダ</h2><button>並び替え</button></div>
+      <div class="body">
+        <div class="shelf" id="shelf"></div>
+        <p class="sec">最近の更新</p>
+        <p class="muted">・アイドルカード 第1弾に「ハートブーツ」を追加<br>・シール帳 の表紙を変更</p>
+      </div>
+    </div>
+    <p class="note">表紙に設定した背景・アイコンとコンプ率が並びます。タップでフォルダを開きます。</p>
+  </section>
+
+  <!-- 2. editor -->
+  <section class="frame" id="f-edit">
+    <p class="label"><i>2</i>フォルダ作成・編集</p>
+    <div class="phone">
+      <div class="bar"><h2>フォルダを編集</h2><button id="saveFolder">保存</button></div>
+      <div class="body">
+        <div class="preview"><div class="cover" id="edPreview"></div></div>
+        <label class="field">名前<input type="text" id="edName" maxlength="20"></label>
+
+        <div class="field">アイコン
+          <div class="seg" id="iconSeg">
+            <button data-v="emoji">絵文字</button><button data-v="stamp">スタンプ作成</button><button data-v="image">画像</button>
+          </div>
+          <div id="iconPane"></div>
+        </div>
+
+        <div class="field">表紙・背景
+          <div class="seg" id="coverSeg">
+            <button data-v="color">単色</button><button data-v="gradient">グラデ</button><button data-v="pattern">柄</button><button data-v="image">画像</button>
+          </div>
+          <div id="coverPane"></div>
+        </div>
+
+        <div class="field">1ページのポケット数
+          <div class="seg" id="pocketSeg">
+            <button data-v="9">9</button><button data-v="4">4</button><button data-v="2">2</button><button data-v="1">1</button>
+          </div>
+        </div>
+
+        <div class="field">中身
+          <div class="seg" id="contentSeg"><button class="on">カタログ順に並べる</button><button>自由に配置</button></div>
+          <span class="muted">紐付け中：アイドルカード 第1弾（12種）</span>
+        </div>
+      </div>
+    </div>
+    <p class="note">変更はすぐにプレビューへ反映。スタンプは形・色・文字を組み合わせて作れます。</p>
+  </section>
+
+  <!-- 3. binder -->
+  <section class="frame" id="f-binder">
+    <p class="label"><i>3</i>フォルダの中（バインダー表示）</p>
+    <div class="phone">
+      <div class="bar"><button data-goto="f-shelf">‹ 棚</button><h2 id="bdTitle"></h2><button>⋯</button></div>
+      <div class="binder-bg" id="bdBg">
+        <div class="prog-line"><div class="t"><span>コンプ率</span><span id="bdCount"></span></div><div class="b"><i id="bdBar"></i></div></div>
+        <div class="toolbar">
+          <button class="chip on" data-filter="all">すべて</button>
+          <button class="chip" data-filter="missing">未所持だけ</button>
+          <button class="chip" data-filter="dupe">ダブり</button>
+        </div>
+        <div class="page" id="bdPage"></div>
+        <div class="dots" id="bdDots"></div>
+        <div class="legend">
+          <span>🟪 持っている</span><span>▦ 未所持（番号のみ）</span><span>◻︎ 未所持（参考画像）</span>
+        </div>
+      </div>
+    </div>
+    <p class="note">持っていないカードは「番号と名前の空きポケット」か「参考画像を薄く」表示。ページは左右スワイプで送ります。</p>
+  </section>
+
+  <!-- 4. detail -->
+  <section class="frame" id="f-detail">
+    <p class="label"><i>4</i>カード詳細</p>
+    <div class="phone">
+      <div class="bar"><button data-goto="f-binder">‹ 戻る</button><h2>カード詳細</h2><button>編集</button></div>
+      <div class="body" id="detail"></div>
+    </div>
+    <p class="note">未所持カードは「ネットで調べる」で番号＋名前の検索を開きます（画像はアプリに保存しません）。</p>
+  </section>
+
+  <!-- 5. import -->
+  <section class="frame" id="f-import">
+    <p class="label"><i>5</i>カタログ取り込み</p>
+    <div class="phone">
+      <div class="bar"><h2>カタログを追加</h2><button id="doImport">取り込む</button></div>
+      <div class="body">
+        <label class="field">カタログ名<input type="text" value="アイドルカード 第2弾"></label>
+        <div class="src" id="srcSeg">
+          <button class="on">📋 貼り付け</button><button>📄 CSV</button><button>🔗 共有ファイル</button>
+        </div>
+        <div class="field">ネットのカードリストをコピーして貼り付け
+          <textarea id="imText">01, ミルキーリボンブラウス, PR
+02, スターダストスカート, R
+03, シャイニーパンプス, N
+04, ムーンライトティアラ, SR
+05, キャンディドレス, CP
+06 サニーキャップ N</textarea>
+        </div>
+        <p class="sec">読み取り結果 <span class="muted" id="imCount"></span></p>
+        <table><thead><tr><th>No.</th><th>名前</th><th>レア</th></tr></thead><tbody id="imTable"></tbody></table>
+        <p class="hint" style="margin-top:10px">「番号, 名前, レアリティ」の順を自動で判別します。区切りはカンマ・タブ・スペースどれでもOK。<br>出典のURLをメモしておくと、あとで見直せます。</p>
+      </div>
+    </div>
+    <p class="note">ネットのリストを貼るだけで、未所持カードも番号つきでフォルダに並びます。</p>
+  </section>
+
+</main>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+'use strict';
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/* ---------- 見た目の素材 ---------- */
+const COLORS = ['#ffb3d1', '#ffd88a', '#a8e6cf', '#9fd3ff', '#c9b6ff', '#3a2a35'];
+const GRADS = [
+  ['#ff8ac0', '#c08bff'], ['#ffd36e', '#ff8ac0'], ['#7ee8fa', '#80ff72'],
+  ['#a18cd1', '#fbc2eb'], ['#232526', '#5b4a6b'], ['#fddb92', '#d1fdff'],
+];
+const PATTERNS = {
+  dot: (c) => `radial-gradient(circle, rgba(255,255,255,.75) 18%, transparent 19%) 0 0/18px 18px, ${c}`,
+  stripe: (c) => `repeating-linear-gradient(45deg, rgba(255,255,255,.5) 0 8px, transparent 8px 16px), ${c}`,
+  check: (c) => `repeating-conic-gradient(rgba(255,255,255,.5) 0 25%, transparent 0 50%) 0 0/24px 24px, ${c}`,
+  heart: (c) => `radial-gradient(circle at 30% 40%, rgba(255,255,255,.6) 12%, transparent 13%) 0 0/22px 22px, radial-gradient(circle at 70% 60%, rgba(255,255,255,.35) 10%, transparent 11%) 0 0/22px 22px, ${c}`,
+};
+const PATTERN_LABEL = { dot: 'ドット', stripe: 'ストライプ', check: 'チェック', heart: 'バブル' };
+const EMOJIS = ['🎀', '⭐', '💖', '👑', '🌸', '🦄', '🍓', '🌙', '⚽', '🎵', '🐱', '💎'];
+const SHAPES = {
+  circle: '<circle cx="50" cy="50" r="46"/>',
+  star: '<path d="M50 4l13 30 32 3-24 21 7 32-28-17-28 17 7-32L5 37l32-3z"/>',
+  heart: '<path d="M50 90S6 62 6 32C6 16 18 6 31 6c9 0 15 5 19 12 4-7 10-12 19-12 13 0 25 10 25 26 0 30-44 58-44 58z"/>',
+  flower: '<g><circle cx="50" cy="24" r="22"/><circle cx="76" cy="44" r="22"/><circle cx="66" cy="74" r="22"/><circle cx="34" cy="74" r="22"/><circle cx="24" cy="44" r="22"/><circle cx="50" cy="52" r="24"/></g>',
+};
+const STAMP_COLORS = ['#ff6fae', '#ffb000', '#3cb48a', '#3d8bff', '#8b5cf6', '#3a2a35'];
+
+function stampSvg(ic) {
+  return `<svg viewBox="0 0 100 100" aria-hidden="true"><g fill="${ic.color}" stroke="#fff" stroke-width="4">${SHAPES[ic.shape]}</g>
+    <text x="50" y="${ic.shape === 'heart' ? 50 : 57}" text-anchor="middle" dominant-baseline="middle" font-size="${ic.text.length > 1 ? 30 : 42}" font-weight="800" fill="#fff" font-family="system-ui, sans-serif">${esc(ic.text)}</text></svg>`;
+}
+function iconHtml(ic) {
+  if (ic.type === 'stamp') return stampSvg(ic);
+  if (ic.type === 'image') return '🖼️';
+  return ic.emoji;
+}
+function coverCss(cv) {
+  if (cv.type === 'color') return cv.color;
+  if (cv.type === 'gradient') { const [a, b] = GRADS[cv.grad]; return `linear-gradient(135deg, ${a}, ${b})`; }
+  if (cv.type === 'pattern') return PATTERNS[cv.pattern](cv.color);
+  return 'linear-gradient(135deg, #cbb8c4, #8a7684)';
+}
+
+/* ---------- 仮データ ---------- */
+const folders = [
+  { name: 'アイドルカード 第1弾', icon: { type: 'stamp', shape: 'star', color: '#ff6fae', text: '1' }, cover: { type: 'gradient', grad: 0, color: '#ffb3d1', pattern: 'dot' }, pockets: 9, edit: true },
+  { name: '推しコーデ', icon: { type: 'emoji', emoji: '👑' }, cover: { type: 'pattern', pattern: 'dot', color: '#c9b6ff', grad: 3 }, pockets: 4, own: 8, total: 8 },
+  { name: 'スポーツカード', icon: { type: 'emoji', emoji: '⚽' }, cover: { type: 'pattern', pattern: 'stripe', color: '#9fd3ff', grad: 2 }, pockets: 9, own: 21, total: 60 },
+  { name: 'シール帳', icon: { type: 'stamp', shape: 'heart', color: '#3cb48a', text: 'S' }, cover: { type: 'gradient', grad: 5, color: '#ffd88a', pattern: 'check' }, pockets: 2, own: 14, total: 20 },
+  { name: 'ダブり置き場', icon: { type: 'emoji', emoji: '🔁' }, cover: { type: 'color', color: '#ffd88a', grad: 1, pattern: 'dot' }, pockets: 9, own: 17, total: 17 },
+];
+const F = folders[0]; // 編集対象
+
+const CAT_NAME = 'アイドルカード 第1弾';
+const cards = [
+  ['01', 'ピンクリボンブラウス', 'PR', '👚', 2, 'a'],
+  ['02', 'スターライトスカート', 'R', '👗', 1, 'b'],
+  ['03', 'ハートブーツ', 'N', '👠', 3, 'c'],
+  ['04', 'ドリームティアラ', 'SR', '👑', 0, 'ref'],
+  ['05', 'マリンセーラー', 'R', '⚓', 1, 'b'],
+  ['06', 'シトラスワンピース', 'CP', '🍋', 0, null],
+  ['07', 'ミントカーディガン', 'N', '🌿', 1, 'c'],
+  ['08', 'ルビーパンプス', 'PR', '💎', 0, 'ref'],
+  ['09', 'クラウドベレー', 'N', '☁️', 0, null],
+  ['10', 'サンセットドレス', 'SR', '🌅', 1, 'd'],
+  ['11', 'スノウマフラー', 'R', '❄️', 0, null],
+  ['12', 'ギャラクシーリボン', 'PR', '🌌', 0, null],
+].map(([no, name, rar, em, qty, ref]) => ({ no, name, rar, em, qty, hasRef: ref === 'ref' }));
+const RAR_BG = { N: ['#efe8f3', '#d9cde6'], R: ['#d6ebff', '#a9cdfa'], PR: ['#ffd6e8', '#ff9fca'], CP: ['#fff0c2', '#ffc96b'], SR: ['#eedcff', '#c69cff'] };
+const faceBg = (c) => { const [a, b] = RAR_BG[c.rar] || RAR_BG.N; return `linear-gradient(150deg, ${a}, ${b})`; };
+
+let page = 0, filter = 'all', selected = cards[3];
+
+/* ---------- ① 棚 ---------- */
+function progressOf(f) {
+  if (f.edit) { const own = cards.filter((c) => c.qty > 0).length; return [own, cards.length]; }
+  return [f.own, f.total];
+}
+function coverHtml(f, withProg = true) {
+  const [o, t] = progressOf(f);
+  return `<div class="cover" style="background:${coverCss(f.cover)}"><div class="ic">${iconHtml(f.icon)}</div>
+    ${withProg ? `<div class="prog"><b style="width:${Math.round(o / t * 100)}%"></b></div>` : ''}</div>`;
+}
+function renderShelf() {
+  $('#shelf').innerHTML = folders.map((f, i) => {
+    const [o, t] = progressOf(f);
+    return `<button class="binder" data-open="${i}">${coverHtml(f)}<div class="nm">${esc(f.name)}</div>
+      <div class="pc">${o} / ${t}${o === t ? ' 👑' : ''}</div></button>`;
+  }).join('') + `<button class="binder add" data-goto="f-edit"><div class="cover">＋</div><div class="nm">新しいフォルダ</div></button>`;
+}
+
+/* ---------- ② 編集 ---------- */
+function setSeg(sel, v) { document.querySelectorAll(`${sel} button`).forEach((b) => b.classList.toggle('on', b.dataset.v === String(v))); }
+function renderEditor() {
+  $('#edPreview').outerHTML = `<div class="cover" id="edPreview" style="background:${coverCss(F.cover)}"><div class="ic">${iconHtml(F.icon)}</div></div>`;
+  setSeg('#iconSeg', F.icon.type); setSeg('#coverSeg', F.cover.type); setSeg('#pocketSeg', F.pockets);
+
+  const ic = F.icon;
+  if (ic.type === 'emoji') {
+    $('#iconPane').innerHTML = `<div class="swatches">${EMOJIS.map((e) => `<button class="sw ${ic.emoji === e ? 'on' : ''}" data-emoji="${e}">${e}</button>`).join('')}</div>`;
+  } else if (ic.type === 'stamp') {
+    $('#iconPane').innerHTML = `
+      <span>形</span><div class="swatches">${Object.keys(SHAPES).map((s) => `<button class="sw ${ic.shape === s ? 'on' : ''}" data-shape="${s}">${stampSvg({ shape: s, color: '#c9b6d6', text: '' })}</button>`).join('')}</div>
+      <span>色</span><div class="swatches">${STAMP_COLORS.map((c) => `<button class="sw ${ic.color === c ? 'on' : ''}" data-scolor="${c}" style="background:${c}"></button>`).join('')}</div>
+      <div class="row"><span>文字</span><input type="text" id="stampText" maxlength="2" value="${esc(ic.text)}"><span class="muted">1〜2文字</span></div>`;
+  } else {
+    $('#iconPane').innerHTML = `<button class="upload">📷 写真・画像を選ぶ（正方形に切り抜き）</button>`;
+  }
+
+  const cv = F.cover;
+  if (cv.type === 'color' || cv.type === 'pattern') {
+    $('#coverPane').innerHTML = (cv.type === 'pattern'
+      ? `<div class="swatches">${Object.keys(PATTERNS).map((p) => `<button class="sw ${cv.pattern === p ? 'on' : ''}" data-pattern="${p}" title="${PATTERN_LABEL[p]}" style="background:${PATTERNS[p]('#c9b6ff')}"></button>`).join('')}</div><span>ベースの色</span>`
+      : '') + `<div class="swatches">${COLORS.map((c) => `<button class="sw ${cv.color === c ? 'on' : ''}" data-color="${c}" style="background:${c}"></button>`).join('')}</div>`;
+  } else if (cv.type === 'gradient') {
+    $('#coverPane').innerHTML = `<div class="swatches">${GRADS.map(([a, b], i) => `<button class="sw ${cv.grad === i ? 'on' : ''}" data-grad="${i}" style="background:linear-gradient(135deg,${a},${b})"></button>`).join('')}</div>`;
+  } else {
+    $('#coverPane').innerHTML = `<button class="upload">📷 写真・画像を選ぶ（明るさ・ぼかし調整つき）</button>`;
+  }
+}
+
+/* ---------- ③ バインダー ---------- */
+function visibleCards() {
+  if (filter === 'missing') return cards.filter((c) => c.qty === 0);
+  if (filter === 'dupe') return cards.filter((c) => c.qty >= 2);
+  return cards;
+}
+function faceHtml(c) {
+  if (c.qty > 0) return `<div class="cardface" style="background:${faceBg(c)}"><span class="no">No.${c.no} ${c.rar}</span><span class="em">${c.em}</span><span class="nm">${esc(c.name)}</span></div>`;
+  if (c.hasRef) return `<div class="cardface ref" style="background:${faceBg(c)}"><span class="no">No.${c.no}</span><span class="em">${c.em}</span><span class="nm">${esc(c.name)}</span></div>`;
+  return `<div class="cardface ph"><span class="no">${c.no}</span><span class="nm">${esc(c.name)}</span></div>`;
+}
+function renderBinder() {
+  $('#bdTitle').textContent = F.name;
+  $('#bdBg').style.background = coverCss(F.cover);
+  const own = cards.filter((c) => c.qty > 0).length;
+  $('#bdCount').textContent = `${own} / ${cards.length}（${Math.round(own / cards.length * 100)}%）`;
+  $('#bdBar').style.width = `${own / cards.length * 100}%`;
+
+  const per = F.pockets, list = visibleCards();
+  const pages = Math.max(1, Math.ceil(list.length / per));
+  page = Math.min(page, pages - 1);
+  const cols = { 9: 3, 4: 2, 2: 2, 1: 1 }[per];
+  const slots = list.slice(page * per, page * per + per);
+  while (slots.length < per) slots.push(null);
+  $('#bdPage').style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  $('#bdPage').innerHTML = slots.map((c) => c ? `<button class="pocket" data-card="${c.no}" aria-label="No.${c.no} ${esc(c.name)}">
+      ${c.qty === 0 ? '<span class="tag">未所持</span>' : ''}${c.qty > 1 ? `<span class="qtyb">×${c.qty}</span>` : ''}${faceHtml(c)}</button>`
+    : '<div class="pocket"></div>').join('');
+  $('#bdDots').innerHTML = Array.from({ length: pages }, (_, i) => `<button class="${i === page ? 'on' : ''}" data-page="${i}" aria-label="${i + 1}ページ"></button>`).join('');
+}
+
+/* ---------- ④ 詳細 ---------- */
+function renderDetail() {
+  const c = selected, owned = c.qty > 0;
+  const q = encodeURIComponent(`${CAT_NAME} ${c.no} ${c.name}`);
+  $('#detail').innerHTML = `
+    <div class="big">${faceHtml(c)}</div>
+    <div class="status"><span class="pill ${owned ? 'own' : 'no'}">${owned ? `持っている ×${c.qty}` : '持っていない'}</span></div>
+    <dl class="kv">
+      <dt>カタログ</dt><dd>${CAT_NAME}</dd>
+      <dt>カードNo.</dt><dd>${c.no}</dd>
+      <dt>名前</dt><dd>${esc(c.name)}</dd>
+      <dt>レアリティ</dt><dd>${c.rar}</dd>
+      <dt>画像</dt><dd>${owned ? '自分で撮影' : c.hasRef ? '参考画像URLあり（保存なし）' : 'なし（番号で表示）'}</dd>
+    </dl>
+    ${owned ? `
+      <div class="stepper"><button data-qty="-1">−</button><b>×${c.qty}</b><button data-qty="1">＋</button></div>
+      <button class="btn">📷 写真を撮り直す</button>
+      <button class="btn">🔁 交換に出す</button>` : `
+      <a class="btn search" href="https://www.google.com/search?q=${q}" target="_blank" rel="noopener">🔍 ネットで調べる</a>
+      <button class="btn primary" data-qty="1">🎉 手に入れた！</button>
+      <button class="btn">💖 欲しいに入れる</button>
+      <button class="btn">🔗 参考画像のURLを登録</button>
+      <p class="hint">参考画像は表示するだけで端末には保存しません。権利者のサイトの画像は、各サイトの規約に従ってご利用ください。</p>`}
+  `;
+}
+
+/* ---------- ⑤ 取り込み ---------- */
+const RAR_RE = /^(N|R|PR|CP|SR|SSR|UR|SEC|C|UC|P|HR|その他)$/i;
+function parseList(text) {
+  return text.split(/\n/).map((l) => l.trim()).filter(Boolean).map((l) => {
+    const t = l.split(/\s*[,\t、，]\s*|\s+/).filter(Boolean);
+    const no = /^[\w-]+$/.test(t[0]) && /\d/.test(t[0]) ? t.shift() : '';
+    const rar = t.length > 1 && RAR_RE.test(t[t.length - 1]) ? t.pop() : '';
+    return { no, name: t.join(' '), rar };
+  });
+}
+function renderImport() {
+  const rows = parseList($('#imText').value);
+  $('#imCount').textContent = `${rows.length} 枚`;
+  $('#imTable').innerHTML = rows.map((r) => `<tr><td>${esc(r.no || '—')}</td><td>${esc(r.name || '—')}</td><td>${esc(r.rar || '—')}</td></tr>`).join('');
+}
+
+/* ---------- 共通 ---------- */
+let tt;
+function toast(m) { const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => (t.hidden = true), 1800); }
+function goto(id) {
+  const ph = $(`#${id} .phone`);
+  $(`#${id}`).scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+  ph.classList.add('flash'); setTimeout(() => ph.classList.remove('flash'), 900);
+}
+function renderAll() { renderShelf(); renderEditor(); renderBinder(); renderDetail(); }
+
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('button, a');
+  if (!b) return;
+  const d = b.dataset;
+  if (d.goto) return goto(d.goto);
+  if (d.open !== undefined) {
+    if (folders[+d.open] === F) return goto('f-binder');
+    return toast('モックでは「アイドルカード 第1弾」だけ開けます');
+  }
+  if (b.closest('#iconSeg') && d.v) { F.icon = d.v === 'stamp' ? { type: 'stamp', shape: F.icon.shape || 'star', color: F.icon.color || '#ff6fae', text: F.icon.text ?? '1' } : { ...F.icon, type: d.v, emoji: F.icon.emoji || '🎀' }; return renderAll(); }
+  if (b.closest('#coverSeg') && d.v) { F.cover.type = d.v; return renderAll(); }
+  if (b.closest('#pocketSeg') && d.v) { F.pockets = +d.v; page = 0; return renderAll(); }
+  if (b.closest('#contentSeg') || b.closest('#srcSeg')) { b.parentElement.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); return; }
+  if (d.emoji) { F.icon.emoji = d.emoji; return renderAll(); }
+  if (d.shape) { F.icon.shape = d.shape; return renderAll(); }
+  if (d.scolor) { F.icon.color = d.scolor; return renderAll(); }
+  if (d.color) { F.cover.color = d.color; return renderAll(); }
+  if (d.grad) { F.cover.grad = +d.grad; return renderAll(); }
+  if (d.pattern) { F.cover.pattern = d.pattern; return renderAll(); }
+  if (d.filter) { filter = d.filter; page = 0; document.querySelectorAll('.toolbar .chip').forEach((x) => x.classList.toggle('on', x === b)); return renderBinder(); }
+  if (d.page) { page = +d.page; return renderBinder(); }
+  if (d.card) { selected = cards.find((c) => c.no === d.card); renderDetail(); return goto('f-detail'); }
+  if (d.qty) {
+    selected.qty = Math.max(0, selected.qty + +d.qty);
+    if (+d.qty > 0 && selected.qty === 1) toast(`🎉 ${selected.name} をゲット！`);
+    return renderAll();
+  }
+  if (b.id === 'saveFolder') return toast('保存しました（モック）');
+  if (b.id === 'doImport') return toast(`${parseList($('#imText').value).length} 枚をカタログに取り込みました（モック）`);
+});
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'edName') { F.name = e.target.value || '名前なし'; renderShelf(); renderBinder(); }
+  if (e.target.id === 'stampText') { F.icon.text = e.target.value; renderShelf(); renderBinder(); $('#edPreview .ic').innerHTML = iconHtml(F.icon); }
+  if (e.target.id === 'imText') renderImport();
+});
+
+// スワイプでページ送り
+let sx = null;
+$('#bdPage').addEventListener('pointerdown', (e) => { sx = e.clientX; });
+$('#bdPage').addEventListener('pointerup', (e) => {
+  if (sx === null) return;
+  const dx = e.clientX - sx; sx = null;
+  if (Math.abs(dx) < 40) return;
+  const pages = Math.ceil(visibleCards().length / F.pockets);
+  page = Math.max(0, Math.min(pages - 1, page + (dx < 0 ? 1 : -1)));
+  renderBinder();
+});
+
+$('#edName').value = F.name;
+renderAll();
+renderImport();
+</script>
+</body>
+</html>
